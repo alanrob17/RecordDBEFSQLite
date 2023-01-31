@@ -366,15 +366,44 @@ code {
     });
   </script>
 <h1 id="record-database-using-entityframework-and-sqlite">Record Database using EntityFramework and SQLite</h1>
+<p>Source code: <code>Projects\RecordDBEFSQLiteApp</code>.</p>
+<p>Add the <code>RecordDB.db</code> database into the <code>Environment.CurrentDirectory</code> folder.</p>
 <h2 id="install-packages">Install packages</h2>
 <pre class="hljs"><code><div>    Install-Package Microsoft.EntityFrameworkCore.Sqlite
 </div></code></pre>
 <p>Then.</p>
 <pre class="hljs"><code><div>    Install-Package Microsoft.EntityFrameworkCore.Tools
 </div></code></pre>
-<p>Now you can scaffold the DbContext.</p>
-<pre class="hljs"><code><div>Scaffold-DbContext -provider Microsoft.EntityFrameworkCore.Sqlite <span class="hljs-string">"DataSource=D:\Sandbox\SQLite\RecordDBEFSQLiteApp\RecordDBEFSQLite\bin\Debug\net7.0\RecordDB.db"</span> -OutputDir D:\Sandbox\SQLite\RecordDBEFSQLiteApp\RecordDBEFSQLite\Data -context RecordDBContext -force
+<p>Then.</p>
+<pre class="hljs"><code><div>    Install-Package System.Configuration.ConfigurationManager
 </div></code></pre>
+<h2 id="scaffold-the-dbcontext">Scaffold the DbContext</h2>
+<pre class="hljs"><code><div>Scaffold-DbContext -provider Microsoft.EntityFrameworkCore.Sqlite <span class="hljs-string">"DataSource=D:\Projects\RecordDBEFSQLiteApp\RecordDBEFSQLite\bin\Debug\net7.0\RecordDB.db"</span> -OutputDir D:\Projects\RecordDBEFSQLiteApp\RecordDBEFSQLite\Data -context RecordDbContext -force
+</div></code></pre>
+<p>This will produce the connection string in the <code>OnConfiguring</code> service.</p>
+<pre class="hljs"><code><div>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnConfiguring</span>(<span class="hljs-params">DbContextOptionsBuilder optionsBuilder</span>)</span>
+    {
+        =&gt; optionsBuilder.UseSqlite(<span class="hljs-string">"DataSource=D:\\Projects\\RecordDBEFSQLiteApp\\RecordDBEFSQLite\\bin\\Debug\\net7.0\\RecordDB.db"</span>);
+    }
+</div></code></pre>
+<p>This also gives a warning message that the connection string should be abstracted out of here.</p>
+<p>We can do this by moving the connection string into the <strong>App.Config</strong> file.</p>
+<h3 id="appconfig">App.Config</h3>
+<pre class="hljs"><code><div><span class="hljs-meta">&lt;?xml version="1.0" encoding="utf-8" ?&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">configuration</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">connectionStrings</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">add</span> <span class="hljs-attr">name</span>=<span class="hljs-string">"RecordDB"</span> <span class="hljs-attr">connectionString</span>=<span class="hljs-string">"Data Source=D:\Projects\RecordDBEFSQLiteApp\RecordDBEFSQLite\bin\Debug\net7.  0\RecordDB.db;Version=3;"</span> <span class="hljs-attr">providerName</span>=<span class="hljs-string">"System.Data.SqlClient"</span>/&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">connectionStrings</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">configuration</span>&gt;</span>
+</div></code></pre>
+<p>Now we can replace the connection string in the <code>OnConfiguring</code> service.</p>
+<pre class="hljs"><code><div>    <span class="hljs-function"><span class="hljs-keyword">protected</span> <span class="hljs-keyword">override</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnConfiguring</span>(<span class="hljs-params">DbContextOptionsBuilder optionsBuilder</span>)</span>
+    {
+        <span class="hljs-keyword">string</span> constr = System.Configuration.ConfigurationManager.ConnectionStrings[<span class="hljs-string">"RecordDB"</span>].ConnectionString;
+        optionsBuilder.UseSqlite(constr);
+    }
+</div></code></pre>
+<p><strong>Note:</strong> the RecordDB context that is created is nowhere near as sophisticated as a SQL Server context but you should be able to add more to the context model to make it more usable.</p>
 
 </body>
 </html>
