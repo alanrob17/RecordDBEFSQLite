@@ -12,12 +12,17 @@ namespace RecordDBEFSQLite
     {
         public static void Main(string[] args)
         {
+            // GetArtist(63);
+            // GetArtistName(114);
             // GetArtistNames();
+            // GetArtistRecordByYear(1974);
+            //GetArtistsWithNoBio();
+            //GetNoBiographyCount();
             // GetRecordList();
             // GetRecordList2();
             // GetRecordList3();
-            // GetArtistRecordByYear(1974);
         }
+
 
         // Artist - Record list - better code.
         private static void GetRecordList()
@@ -96,6 +101,68 @@ namespace RecordDBEFSQLite
             }
         }
 
+        /// <summary>
+        /// Get Artist details.
+        /// </summary>
+        public static void GetArtist(int artistId)
+        {
+            var artist = _ad.GetArtist(artistId);
+
+            if (artist.ArtistId > 0)
+            {
+                Console.WriteLine($"Artist Id: {artist.ArtistId}.\nName: {artist?.Name},\n Biography: {artist?.Biography}");
+            }
+            else
+            {
+                Console.WriteLine($"Artist with Id: {artistId} not found!");
+            }
+        }
+
+        /// <summary>
+        /// Get Artist name.
+        /// </summary>
+        public static void GetArtistName(int artistId)
+        {
+                var artist = _ad.GetArtist(artistId);
+
+                if (artist.ArtistId > 0)
+                {
+                    Console.WriteLine(artist.Name);
+                }
+                else 
+                {
+                    Console.WriteLine($"Artist with Id: {artistId} not found!");
+                }
+        }
+
+        /// <summary>
+        /// Select all artists with no biography.
+        /// </summary>
+        public static void GetArtistsWithNoBio()
+        {
+            var artists = _ad.GetArtistsWithNoBio();
+
+            if (artists.Any())
+            {
+                foreach (var artist in artists)
+                {
+                    Console.WriteLine($"Id: {artist.ArtistId} - {artist.Name}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get the count of Artist records with no Biography.
+        /// </summary>
+        private static void GetNoBiographyCount()
+        {
+            var count = _ad.NoBiographyCount();
+
+            if (count > 0)
+            {
+                Console.WriteLine($"The number of records with no artist biography is: {count}.");
+            }
+        }
 
     }
 }
