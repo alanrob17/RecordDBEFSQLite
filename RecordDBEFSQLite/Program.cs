@@ -12,17 +12,104 @@ namespace RecordDBEFSQLite
     {
         public static void Main(string[] args)
         {
+            GetArtistId("Bob", "Dylan");
+            // CreateArtist();
+            // UpdateArtist(823);
+            // DeleteArtist(823);
             // GetArtist(63);
             // GetArtistName(114);
             // GetArtistNames();
+            // GetArtistsWithNoBio();
+            // GetNoBiographyCount();
             // GetArtistRecordByYear(1974);
-            //GetArtistsWithNoBio();
-            //GetNoBiographyCount();
             // GetRecordList();
             // GetRecordList2();
             // GetRecordList3();
         }
 
+        private static void GetArtistId(string firstName, string lastName)
+        {
+            int artistId = _ad.GetArtistId(firstName, lastName);
+
+            if (artistId > 0)
+            {
+                Console.WriteLine($"Artist Id is {artistId}");
+            }
+            else 
+            { 
+                Console.WriteLine("ERROR: Artist name not found.");
+            }
+        }
+
+        private static void DeleteArtist(int artistId)
+        {
+            var success = _ad.DeleteArtist(artistId);
+
+            if (success)
+            {
+                Console.WriteLine($"Artist with Id: {artistId} deleted.");
+            }
+            else
+            {
+                Console.WriteLine($"ERROR: Couldn't delete Artist with Id: {artistId}!");
+            }
+        }
+
+        private static void UpdateArtist(int artistId)
+        {
+            Artist artist = new()
+            {
+                ArtistId = artistId,
+                FirstName = "Joseph",
+                LastName = "Whopposoni",
+                Name = "",
+                Biography = "Joe is an Italian country and western singer. He likes both kinds of music."
+            };
+
+            bool success = _ad.UpdateArtist(artist);
+
+            if (success)
+            {
+                Console.WriteLine($"Successfully update artist with Id: {artistId}");
+            }
+            else 
+            {
+                Console.WriteLine("ERROR: Artist couldn't be updated!");
+            }
+        }
+
+        private static void CreateArtist()
+        {
+            Artist artist = new()
+            {
+                FirstName = "Joe",
+                LastName = "Whoppo",
+                Name = "",
+                Biography = "Joe is a country and western singer. He likes both kinds of music."
+            };
+
+            artist.Name = string.IsNullOrEmpty(artist.FirstName) ? artist.LastName : $"{artist.FirstName} {artist.LastName}";
+
+            var exists = _ad.CheckForArtistName(artist.Name);
+
+            if (exists)
+            {
+                Console.WriteLine("Artist Already exists in the Database!");
+            }
+            else
+            {
+                var id = _ad.InsertArtist(artist);
+
+                if (id > 0)
+                {
+                    Console.WriteLine($"Artist created with Id: {id}");
+                }
+                else
+                {
+                    Console.WriteLine("New artist record not created!");
+                }
+            }
+        }
 
         // Artist - Record list - better code.
         private static void GetRecordList()
@@ -123,16 +210,16 @@ namespace RecordDBEFSQLite
         /// </summary>
         public static void GetArtistName(int artistId)
         {
-                var artist = _ad.GetArtist(artistId);
+            var artist = _ad.GetArtist(artistId);
 
-                if (artist.ArtistId > 0)
-                {
-                    Console.WriteLine(artist.Name);
-                }
-                else 
-                {
-                    Console.WriteLine($"Artist with Id: {artistId} not found!");
-                }
+            if (artist.ArtistId > 0)
+            {
+                Console.WriteLine(artist.Name);
+            }
+            else
+            {
+                Console.WriteLine($"Artist with Id: {artistId} not found!");
+            }
         }
 
         /// <summary>

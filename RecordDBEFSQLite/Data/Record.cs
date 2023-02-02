@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace RecordDBEFSQLite.Data;
 
 public partial class Record
 {
-    public long RecordId { get; set; }
+    [Key]
+    public int RecordId { get; set; }
 
-    public long ArtistId { get; set; }
+    public int ArtistId { get; set; }
 
     public string Name { get; set; } = null!;
 

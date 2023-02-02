@@ -29,16 +29,20 @@ public partial class RecordDbContext : DbContext
     {
         modelBuilder.Entity<Artist>(entity =>
         {
+            entity.HasKey(e => e.ArtistId);
+            
             entity.ToTable("Artist");
 
-            entity.Property(e => e.ArtistId).ValueGeneratedNever();
+            // entity.Property(e => e.ArtistId).ValueGeneratedNever();
         });
 
         modelBuilder.Entity<Record>(entity =>
         {
+            entity.HasKey(e => e.RecordId);
+
             entity.ToTable("Record");
 
-            entity.Property(e => e.RecordId).ValueGeneratedNever();
+            // entity.Property(e => e.RecordId).ValueGeneratedNever();
         });
 
         OnModelCreatingPartial(modelBuilder);
