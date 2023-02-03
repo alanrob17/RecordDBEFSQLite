@@ -12,7 +12,9 @@ namespace RecordDBEFSQLite
     {
         public static void Main(string[] args)
         {
+            //// Artists
             // GetArtistById(114);
+            // GetArtistEntity(114);
             // GetArtistByName("Bruce Cockburn");
             // GetBiography(114);
             // ArtistHtml(114);
@@ -25,10 +27,80 @@ namespace RecordDBEFSQLite
             // GetArtistNames();
             // GetArtistsWithNoBio();
             // GetNoBiographyCount();
+            //// Records
+            // GetRecordById(2196);
+            // GetRecordEntity(2196);
             // GetArtistRecordByYear(1974);
             // GetRecordList();
             // GetRecordList2();
             // GetRecordList3();
+            // CountDiscs(string.Empty);
+            // CountDiscs("DVD");
+            // CountDiscs("CD");
+            // CountDiscs("R");
+            // GetArtistRecordEntity(2196);
+        }
+
+        private static void GetArtistRecordEntity(int recordId)
+        {
+            var ar = _rd.GetArtistRecordEntity(recordId);
+
+            // I will print out the Artist-Record but normally you would use the Entity values.
+            Console.WriteLine(ar.ToString());
+        }
+
+        private static void CountDiscs(string media)
+        {
+            var discs = _rd.CountAllDiscs(media);
+
+            switch (media)
+            {
+                case "":
+                    Console.WriteLine($"The total number of all discs is: {discs}");
+                    break;
+                case "DVD":
+                    Console.WriteLine($"The total number of all DVD, CD/DVD Blu-ray or CD/Blu-ray discs is: {discs}");
+                    break;
+                case "CD":
+                    Console.WriteLine($"The total number of audio discs is: {discs}");
+                    break;
+                case "R":
+                    Console.WriteLine($"The total number of vinyl discs is: {discs}");
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private static void GetArtistEntity(int artistId)
+        {
+            var artist = _ad.GetArtistEntity(artistId);
+
+            if (artist.ArtistId > 0)
+            {
+                Console.WriteLine(artist.ToString());
+            }
+        }
+
+        private static void GetRecordEntity(int recordId)
+        {
+            var record = _rd.GetRecordEntity(recordId);
+
+            if (record.RecordId > 0)
+            {
+                Console.WriteLine($"Id: {record.RecordId} - Name: {record.Name} - Recorded: {record.Recorded} - Media: {record.Media}");
+            }
+            else
+            {
+                Console.WriteLine($"Record with Id: {recordId} not found!");
+            }
+        }
+
+        private static void GetRecordById(int recordId)
+        {
+            var artistRecord = _rd.GetArtistRecord(recordId);
+
+            Console.WriteLine(artistRecord);
         }
 
         private static void GetBiography(int artistid)

@@ -321,5 +321,29 @@ namespace RecordDBEFSQLite.Data
 
             return artistRecords.ToString();
         }
+
+        public static Artist GetArtistEntity(int artistId)
+        {
+            var artist = new Artist();
+
+            using (var context = new RecordDbContext())
+            {
+                artist = context.Artists.FirstOrDefault(a => a.ArtistId == artistId);
+
+                if (artist is Artist)
+                {
+                    return artist;
+                }
+                else
+                {
+                    Artist missingArtist = new()
+                    {
+                        ArtistId = 0
+                    };
+                        
+                    return missingArtist;
+                }
+            }
+        }
     }
 }

@@ -22,5 +22,10 @@ namespace RecordDBEFSQLite.Data
         public string Rating { get; set; } = null!;
 
         public string Media { get; set; } = null!;
+
+        public override string ToString()
+        {
+            return $"Artist Id: {ArtistId}, Artist: {Artist}, RecordId: {RecordId}, Name: {Name}, Recorded: {Recorded}, Rating: {Rating}, Media: {Media}";
+        }
     }
 }

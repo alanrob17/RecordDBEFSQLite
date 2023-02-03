@@ -32,4 +32,9 @@ public partial class Record
     public double? Cost { get; set; }
 
     public string? Review { get; set; }
+
+    public override string ToString()
+    {
+        return $"Record Id: {RecordId}, Name: {Name}, Recorded: {Recorded}, Media: {Media}";
+    }
 }
