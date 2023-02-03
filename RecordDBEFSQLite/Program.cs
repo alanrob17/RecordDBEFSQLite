@@ -12,7 +12,11 @@ namespace RecordDBEFSQLite
     {
         public static void Main(string[] args)
         {
-            GetArtistId("Bob", "Dylan");
+            // GetArtistById(114);
+            // GetArtistByName("Bruce Cockburn");
+            // GetBiography(114);
+            // ArtistHtml(114);
+            // GetArtistId("Bob", "Dylan");
             // CreateArtist();
             // UpdateArtist(823);
             // DeleteArtist(823);
@@ -25,6 +29,23 @@ namespace RecordDBEFSQLite
             // GetRecordList();
             // GetRecordList2();
             // GetRecordList3();
+        }
+
+        private static void GetBiography(int artistid)
+        {
+            var biography = _ad.GetBiography(artistid);
+
+            if (biography.Length > 5)
+            {
+                Console.WriteLine(biography);
+            }
+        }
+
+        private static void ArtistHtml(int artistId)
+        {
+            var artist = _ad.ShowArtist(artistId);
+
+            Console.WriteLine(artist);
         }
 
         private static void GetArtistId(string firstName, string lastName)
@@ -251,5 +272,19 @@ namespace RecordDBEFSQLite
             }
         }
 
+        public static void GetArtistByName(string artistName)
+        {
+
+            var artist = _ad.GetArtistByName(artistName);
+
+            Console.WriteLine(artist);
+        }
+
+        private static void GetArtistById(int artistId)
+        {
+            var artistRecords = _ad.GetArtistById(artistId);
+
+            Console.WriteLine(artistRecords);
+        }
     }
 }

@@ -147,8 +147,9 @@ namespace RecordDBEFSQLite.Data
 
                     return true;
                 }
-                else { 
-                    return false; 
+                else
+                {
+                    return false;
                 }
             }
         }
@@ -169,8 +170,8 @@ namespace RecordDBEFSQLite.Data
 
                     return true;
                 }
-                else 
-                { 
+                else
+                {
                     return false;
                 }
             }
@@ -185,7 +186,7 @@ namespace RecordDBEFSQLite.Data
 
             using (var context = new RecordDbContext())
             {
-                var artist = context.Artists.FirstOrDefault(a => a.Name == name);
+                var artist = context.Artists.FirstOrDefault(a => a.Name.ToLower() == name.ToLower());
 
                 if (artist != null)
                 {
@@ -196,6 +197,129 @@ namespace RecordDBEFSQLite.Data
                     return 0;
                 }
             }
+        }
+
+        /// <summary>
+        /// Show an artist as Html.
+        /// </summary>
+        public static string ShowArtist(int artistId)
+        {
+            var artistRecord = string.Empty;
+
+            using (var context = new RecordDbContext())
+            {
+                var artist = context.Artists.FirstOrDefault(a => a.ArtistId == artistId);
+
+                if (artist != null)
+                {
+                    artistRecord = ToHtml(artist);
+                }
+            }
+
+            return artistRecord;
+        }
+
+        /// <summary>
+        /// ToHtml method shows an instances properties
+        /// </summary>
+        /// <param name="artist">The artist.</param>
+        /// <returns>The <see cref="string"/> artist record as a string.</returns>
+        public static string ToHtml(Artist artist)
+        {
+            var artistDetails = new StringBuilder();
+
+            artistDetails.Append($"<p><strong>ArtistId: </strong>{artist.ArtistId}</p>\n");
+
+            if (!string.IsNullOrEmpty(artist.FirstName))
+            {
+                artistDetails.Append($"<p><strong>First Name: </strong>{artist.FirstName}</p>\n");
+            }
+
+            artistDetails.Append($"<p><strong>Last Name: </strong>{artist.LastName}</p>\n");
+
+            if (!string.IsNullOrEmpty(artist.Name))
+            {
+                artistDetails.Append($"<p><strong>Name: </strong>{artist.Name}</p>\n");
+            }
+
+            if (!string.IsNullOrEmpty(artist.Biography))
+            {
+                artistDetails.Append($"<p><strong>Biography: </strong></p>\n<div>\n{artist.Biography}\n</div>\n");
+            }
+
+            return artistDetails.ToString();
+        }
+
+        /// <summary>
+        /// Get biography from the current record Id.
+        /// </summary>
+        public static string GetBiography(int artistId)
+        {
+            var bio = new StringBuilder();
+
+            using (var context = new RecordDbContext())
+            {
+                var artist = context.Artists.FirstOrDefault(a => a.ArtistId == artistId);
+                if (artist != null)
+                {
+                    bio.Append($"Name: {artist.Name}\n");
+                    bio.Append($"Biography:\n{artist.Biography}");
+                }
+            }
+
+            return bio.ToString();
+        }
+
+        public static string GetArtistByName(string artistName)
+        {
+            var artistRecords = new StringBuilder();
+
+            using (var context = new RecordDbContext())
+            {
+                var records = context.Records
+                    .Join(context.Artists, record => record.ArtistId, artist => artist.ArtistId, (record, artist) => new { record, artist })
+                    .Where(r => r.artist.Name != null && r.artist.Name.ToLower().Contains(artistName.ToLower()))
+                    .OrderBy(r => r.record.Recorded)
+                    .ToList();
+
+                artistRecords.Append($"{artistName}\n");
+
+                if (records.Any())
+                {
+                    foreach (var r in records)
+                    {
+                        artistRecords.Append($"\t{r.record.Name} - {r.record.Recorded} - {r.record.Media}\n");
+                    }
+                }
+            }
+
+            return artistRecords.ToString();
+        }
+
+        public static string GetArtistById(int artistId)
+        {
+            var artistRecords = new StringBuilder();
+
+            using (var context = new RecordDbContext())
+            {
+                var records = context.Records
+                                    .Join(context.Artists, record => record.ArtistId, artist => artist.ArtistId, (record, artist) => new { record, artist })
+                                    .Where(r => r.artist.ArtistId == artistId)
+                                    .OrderBy(r => r.record.Recorded)
+                                    .ToList();
+
+                if (records.Any())
+                {
+                    artistRecords.Append($"{records[0].artist.ArtistId} - {records[0].artist.Name}\n\n");
+
+                    foreach (var r in records)
+                    {
+                        artistRecords.Append($"\t{r.record.Name} - {r.record.Recorded} ({r.record.Media})\n");
+                    }
+                }
+            }
+
+            return artistRecords.ToString();
         }
     }
 }
