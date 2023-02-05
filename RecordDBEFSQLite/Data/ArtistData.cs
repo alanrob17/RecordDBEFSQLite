@@ -18,26 +18,21 @@ namespace RecordDBEFSQLite.Data
             }
         }
 
-        public static Artist GetArtistName(int artistId)
+        public static string GetArtistName(int artistId)
         {
+            var name = string.Empty;
+
             using (var context = new RecordDbContext())
             {
                 var artist = context.Artists.FirstOrDefault(a => a.ArtistId == artistId);
 
                 if (artist != null)
                 {
-                    return artist;
-                }
-                else
-                {
-                    artist = new()
-                    {
-                        ArtistId = 0
-                    };
-
-                    return artist;
+                   name = artist.Name;
                 }
             }
+
+            return name;
         }
 
         public static Artist GetArtist(int artistId)

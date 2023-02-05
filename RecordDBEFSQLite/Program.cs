@@ -8,7 +8,7 @@ using _rd = RecordDBEFSQLite.Data.RecordData;
 
 namespace RecordDBEFSQLite
 {
-    internal class Program
+    public class Program
     {
         public static void Main(string[] args)
         {
@@ -28,7 +28,7 @@ namespace RecordDBEFSQLite
             // GetArtistsWithNoBio();
             // GetNoBiographyCount();
             //// Records
-            // GetRecordById(2196);
+            GetRecordById(2196);  // TODO: Change this to return a record class only.
             // GetRecordEntity(2196);
             // GetArtistRecordByYear(1974);
             // GetRecordList();
@@ -39,14 +39,97 @@ namespace RecordDBEFSQLite
             // CountDiscs("CD");
             // CountDiscs("R");
             // GetArtistRecordEntity(2196);
+            // GetArtistNumberOfRecords(114);
+            // GetRecordDetails(2196);
+            // GetArtistNameFromRecord(2196);
+            // GetDiscCountForYear(2022);
+            // GetBoughtDiscCountForYear(2018);
+            // GetNoRecordReview();
+            // GetNoReviewCount();
+            // GetTotalArtistCost();
+            // GetTotalArtistDiscs();
+        }
+
+        private static void GetTotalArtistDiscs()
+        {
+            var list = _rd.GetTotalArtistDiscs();
+
+            foreach (var item in list)
+            {
+                Console.WriteLine($"Total number of discs for {item.ArtistName} is {item.Discs}.");
+            }
+        }
+
+        private static void GetTotalArtistCost()
+        {
+            var list = _rd.GetCostTotals();
+
+            foreach (var item in list)
+            {
+                Console.WriteLine($"Total cost for {item.ArtistName} is ${item.Cost:F2}.");
+            }
+        }
+
+        private static void GetNoReviewCount()
+        {
+            var count = _rd.SumOfMissingReviews();
+
+            Console.WriteLine($"The total number of missing reviews is {count}");
+        }
+
+        private static void GetNoRecordReview()
+        {
+            var records = _rd.MissingRecordReviews();
+
+            foreach (var record in records)
+            {
+                Console.WriteLine($"{record.Artist} - Id: {record.RecordId} - {record.Name} - {record.Recorded}");
+            }
+        }
+
+        private static void GetBoughtDiscCountForYear(int year)
+        {
+            var count = _rd.GetBoughtDiscCountForYear(year);
+
+            Console.WriteLine($"The total number of discs bought in {year} is {count}.");
+        }
+
+        private static void GetDiscCountForYear(int year)
+        {
+            var count = _rd.GetDiscCountForYear(year);
+
+            Console.WriteLine($"The total number of discs for {year} are {count}.");
+        }
+
+        private static void GetArtistNameFromRecord(int recordId)
+        {
+            var name = _rd.GetArtistNameFromRecord(recordId);
+            Console.WriteLine(name);
+        }
+
+        private static void GetRecordDetails(int recordId)
+        {
+            var record = _rd.GetFormattedRecord(recordId);
+
+            Console.WriteLine(record);
+        }
+
+        private static void GetArtistNumberOfRecords(int artistId)
+        {
+            var artist = _ad.GetArtistName(artistId);
+            var recordNumber = _rd.GetArtistNumberOfRecords(artistId);
+            Console.WriteLine($"{artist} has {recordNumber} discs.");
         }
 
         private static void GetArtistRecordEntity(int recordId)
         {
-            var ar = _rd.GetArtistRecordEntity(recordId);
+            var r = _rd.GetArtistRecordEntity(recordId);
 
-            // I will print out the Artist-Record but normally you would use the Entity values.
-            Console.WriteLine(ar.ToString());
+            if (r != null)
+            {
+                Console.WriteLine($"{r.Artist}\n");
+                Console.WriteLine($"\t{r.Recorded} - {r.Name} ({r.Media}) - Rating: {r.Rating}");
+            }
         }
 
         private static void CountDiscs(string media)
@@ -272,6 +355,17 @@ namespace RecordDBEFSQLite
             }
         }
 
+        //private static void GetArtistRecordByYear2(int year)
+        //{
+        //    var list = _rd.GetArtistRecordByYear2(year);
+        //    Console.WriteLine($"List of records for {year}.");
+
+        //    foreach (var record in list)
+        //    {
+        //        Console.WriteLine($"{record.Artist}: {record.Name} - {record.Recorded} - {record.Media}");
+        //    }
+        //}
+
         private static void GetArtistNames()
         {
             var artists = _ad.GetArtists();
@@ -303,11 +397,11 @@ namespace RecordDBEFSQLite
         /// </summary>
         public static void GetArtistName(int artistId)
         {
-            var artist = _ad.GetArtist(artistId);
+            var artist = _ad.GetArtistName(artistId);
 
-            if (artist.ArtistId > 0)
+            if (!string.IsNullOrEmpty(artist))
             {
-                Console.WriteLine(artist.Name);
+                Console.WriteLine(artist);
             }
             else
             {

@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace RecordDBEFSQLite.Data
 {
@@ -19,10 +20,12 @@ namespace RecordDBEFSQLite.Data
             }
         }
 
-        public static List<ArtistRecord> GetRecordList()
+        /// <summary>
+        /// Get Artist and their record details.
+        /// Called by GetRecordList3
+        /// </summary>
+        public static IEnumerable<dynamic> GetRecordList()
         {
-            List<ArtistRecord> list = new List<ArtistRecord>();
-
             using (var context = new RecordDbContext())
             {
                 var records = context.Records
@@ -32,30 +35,21 @@ namespace RecordDBEFSQLite.Data
                     .ThenBy(r => r.record.Recorded)
                     .ToList();
 
-                if (records.Any())
+                return records.Select(r => new
                 {
-                    foreach (var r in records)
-                    {
-                        ArtistRecord ar = new ArtistRecord();
-                        ar.ArtistId = r.artist.ArtistId;
-                        ar.Artist = r.artist.Name;
-                        ar.RecordId = r.record.RecordId;
-                        ar.Name = r.record.Name;
-                        ar.Recorded = r.record.Recorded;
-                        ar.Rating = r.record.Rating;
-                        ar.Media = r.record.Media;
-                        list.Add(ar);
-                    }
-                }
+                    ArtistId = r.artist.ArtistId,
+                    Artist = r.artist.Name,
+                    RecordId = r.record.RecordId,
+                    Name = r.record.Name,
+                    Recorded = r.record.Recorded,
+                    Rating = r.record.Rating,
+                    Media = r.record.Media
+                });
             }
-
-            return list;
         }
 
-        public static List<ArtistRecord> GetArtistRecordByYear(int year)
+        public static IEnumerable<dynamic> GetArtistRecordByYear(int year)
         {
-            List<ArtistRecord> list = new List<ArtistRecord>();
-
             using (var context = new RecordDbContext())
             {
                 var records = context.Records
@@ -65,65 +59,50 @@ namespace RecordDBEFSQLite.Data
                     .ThenBy(r => r.artist.FirstName)
                     .ToList();
 
-                if (records.Any())
+                return records.Select(r => new
                 {
-                    foreach (var r in records)
-                    {
-                        ArtistRecord ar = new ArtistRecord();
-                        ar.ArtistId = r.artist.ArtistId;
-                        ar.Artist = r.artist.Name;
-                        ar.RecordId = r.record.RecordId;
-                        ar.Name = r.record.Name;
-                        ar.Recorded = r.record.Recorded;
-                        ar.Rating = r.record.Rating;
-                        ar.Media = r.record.Media;
-                        list.Add(ar);
-                    }
-                }
+                    ArtistId = r.artist.ArtistId,
+                    Artist = r.artist.Name,
+                    RecordId = r.record.RecordId,
+                    Name = r.record.Name,
+                    Recorded = r.record.Recorded,
+                    Rating = r.record.Rating,
+                    Media = r.record.Media
+                });
             }
-
-            return list;
         }
 
-        /// <summary>
-        /// Get record details including the artist name.
-        /// </summary>
-        public static ArtistRecord GetArtistRecordEntity(int recordId)
+        public static dynamic? GetArtistRecordEntity(int recordId)
         {
-            var ar = new ArtistRecord();
-
             using (var context = new RecordDbContext())
             {
-                var record = context.Records.FirstOrDefault(r => r.RecordId == recordId);
-
-                if (record is Record)
-                {
-                    var artist = context.Artists.FirstOrDefault(r => r.ArtistId == record.ArtistId);
-
-                    if (artist is Artist)
+                var record = context.Records
+                    .Join(context.Artists, r => r.ArtistId, a => a.ArtistId, (r, a) => new { record = r, artist = a })
+                    .Where(r => r.record.RecordId == recordId)
+                    .Select(r => new
                     {
-                        ar.Artist = artist.Name;
-                        ar.ArtistId = artist.ArtistId;
-                    }
+                        ArtistId = r.artist.ArtistId,
+                        Artist = r.artist.Name,
+                        RecordId = r.record.RecordId,
+                        Name = r.record.Name,
+                        Recorded = r.record.Recorded,
+                        Rating = r.record.Rating,
+                        Media = r.record.Media
+                    })
+                    .FirstOrDefault();
 
-                    ar.RecordId = record.RecordId;
-                    ar.Name = record.Name;
-                    ar.Recorded = record.Recorded;
-                    ar.Rating = record.Rating;
-                    ar.Media = record.Media;
-                }
-                else
+                if (record != null)
                 {
-                    ar.ArtistId = 0;
-                    ar.RecordId = 0;
+                    return record;
                 }
-
-                return ar;
             }
+
+            return null;
         }
-        
+
         /// <summary>
         /// Get record details including the artist name.
+        /// TODO: Change this to an anonymous method - remove ArtistRecord class.
         /// </summary>
         public static string GetArtistRecord(int recordId)
         {
@@ -189,7 +168,7 @@ namespace RecordDBEFSQLite.Data
             switch (media)
             {
                 case "":
-                    mediaTypes = new List<string> { "DVD", "CD/DVD", "Blu-ray", "CD/Blu-ray", "CD", "R"};
+                    mediaTypes = new List<string> { "DVD", "CD/DVD", "Blu-ray", "CD/Blu-ray", "CD", "R" };
                     break;
                 case "DVD":
                     mediaTypes = new List<string> { "DVD", "CD/DVD", "Blu-ray", "CD/Blu-ray" };
@@ -201,7 +180,7 @@ namespace RecordDBEFSQLite.Data
                     mediaTypes = new List<string> { "R" };
                     break;
                 default:
-                break;
+                    break;
             }
 
             using (var context = new RecordDbContext())
@@ -209,8 +188,211 @@ namespace RecordDBEFSQLite.Data
                 var sumOfDiscs = context.Records
                     .Where(r => mediaTypes.Contains(r.Media))
                     .Sum(r => r.Discs);
-            
+
                 return (int)sumOfDiscs;
+            }
+        }
+
+        /// <summary>
+        /// Get number of records for an artist.
+        /// </summary>
+        public static int GetArtistNumberOfRecords(int artistId)
+        {
+            var discs = 0;
+
+            using (var context = new RecordDbContext())
+            {
+                var artist = context.Artists.FirstOrDefault(a => a.ArtistId == artistId);
+
+                var sumOfDiscs = context.Records
+                    .Where(r => r.ArtistId == 114)
+                    .Select(r => r.Discs)
+                    .Sum();
+
+                if (sumOfDiscs > 0 && artist is Artist)
+                {
+                    discs = (int)sumOfDiscs;
+                }
+            }
+
+            return discs;
+        }
+
+        /// <summary>
+        /// Get record details from ToString method.
+        /// </summary>
+        public static string GetFormattedRecord(int recordId)
+        {
+            var recordDetails = string.Empty;
+
+            using (var context = new RecordDbContext())
+            {
+                var record = context.Records.SingleOrDefault(r => r.RecordId == recordId);
+
+                if (record is Record)
+                {
+                    recordDetails = record.ToString();
+                }
+            }
+
+            return recordDetails;
+        }
+
+        public static string GetArtistNameFromRecord(int recordId)
+        {
+            var artistName = string.Empty;
+
+            using (var context = new RecordDbContext())
+            {
+                var record = context.Records
+                    .Join(context.Artists, record => record.ArtistId, artist => artist.ArtistId, (record, artist) => new { record, artist })
+                    .Where(r => r.record.RecordId == recordId)
+                    .ToList();
+
+                if (record.Any())
+                {
+                    artistName = record[0].artist.Name;
+                }
+            }
+
+            return artistName;
+        }
+
+        /// <summary>
+        /// Get the number of discs for a particular year.
+        /// </summary>
+        public static int GetDiscCountForYear(int year)
+        {
+            var discCount = 0;
+
+            using (var context = new RecordDbContext())
+            {
+                var records = context.Records.ToList();
+
+                var numberOfDiscs = records
+                    .Where(r => r.Recorded == year)
+                    .Select(r => r.Discs)
+                    .Sum();
+
+                discCount = (int)numberOfDiscs;
+            }
+
+            return discCount;
+        }
+
+        /// <summary>
+        /// Get the number of discs that I bought for a particular year.
+        /// </summary>
+        public static int GetBoughtDiscCountForYear(int year)
+        {
+            var discCount = 0;
+
+            using (var context = new RecordDbContext())
+            {
+                var records = context.Records.ToList();
+
+                var numberOfDiscs = records
+                    .Where(r => !string.IsNullOrEmpty(r.Bought) && r.Bought.Contains(year.ToString()))
+                    .Select(r => r.Discs)
+                    .Sum();
+
+                discCount = (int)numberOfDiscs;
+            }
+
+            return discCount;
+        }
+
+        /// <summary>
+        /// Get a list of records without reviews.
+        /// TODO: Change this to an anonymous method - remove ArtistRecord class.
+        /// </summary>
+        public static List<ArtistRecord> MissingRecordReviews()
+        {
+            List<ArtistRecord> artistRecords = new();
+
+            using (var context = new RecordDbContext())
+            {
+                var records = context.Records
+                    .Join(context.Artists, record => record.ArtistId, artist => artist.ArtistId, (record, artist) => new { artist, record })
+                    .Where(r => string.IsNullOrEmpty(r.record.Review))
+                    .OrderBy(r => r.artist.LastName).ThenBy(r => r.artist.FirstName)
+                    .ToList();
+
+                foreach (var r in records)
+                {
+                    ArtistRecord ar = new()
+                    {
+                        ArtistId = r.artist.ArtistId,
+                        Artist = r.artist.Name,
+                        RecordId = r.record.RecordId,
+                        Name = r.record.Name,
+                        Recorded = r.record.Recorded,
+                        Rating = r.record.Rating,
+                        Media = r.record.Media
+                    };
+
+                    artistRecords.Add(ar);
+                }
+            }
+
+            return artistRecords;
+        }
+
+        public static int SumOfMissingReviews()
+        {
+            int total = 0;
+
+            using (var context = new RecordDbContext())
+            {
+                var count = context.Records
+                           .Where(r => string.IsNullOrEmpty(r.Review))
+                           .Count();
+
+                total = count;
+            }
+
+            return total;
+        }
+
+        /// <summary>
+        /// Get total number of discs for each artist.
+        /// </summary>
+        public static IEnumerable<dynamic> GetTotalArtistDiscs()
+        {
+            var list = new List<dynamic>();
+
+            using (var context = new RecordDbContext())
+            {
+                return context.Artists
+                          .OrderBy(a => a.LastName)
+                          .ThenBy(a => a.FirstName)
+                          .Select(artist => new
+                          {
+                              ArtistName = artist.Name,
+                              Discs = context.Records.Where(r => r.ArtistId == artist.ArtistId).Sum(r => r.Discs)
+                          })
+                          .ToList();
+            }
+        }
+
+        /// <summary>
+        /// Get total cost spent on each artist.
+        /// </summary>
+        public static IEnumerable<dynamic> GetCostTotals()
+        {
+            var list = new List<dynamic>();
+
+            using (var context = new RecordDbContext())
+            {
+                return context.Artists
+                          .OrderBy(a => a.LastName)
+                          .ThenBy(a => a.FirstName)
+                          .Select(artist => new
+                          {
+                              ArtistName = artist.Name,
+                              Cost = context.Records.Where(r => r.ArtistId == artist.ArtistId).Sum(r => r.Cost)
+                          })
+                          .ToList();
             }
         }
     }
