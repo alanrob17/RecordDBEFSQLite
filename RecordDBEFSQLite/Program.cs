@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using RecordDBEFSQLite.Data;
 using System.Collections.Generic;
 using System.Data;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Text.RegularExpressions;
 using _ad = RecordDBEFSQLite.Data.ArtistData;
 using _rd = RecordDBEFSQLite.Data.RecordData;
 
@@ -13,13 +15,13 @@ namespace RecordDBEFSQLite
         public static void Main(string[] args)
         {
             //// Artists
+            // CreateArtist();
             // GetArtistById(114);
             // GetArtistEntity(114);
             // GetArtistByName("Bruce Cockburn");
             // GetBiography(114);
             // ArtistHtml(114);
             // GetArtistId("Bob", "Dylan");
-            // CreateArtist();
             // UpdateArtist(823);
             // DeleteArtist(823);
             // GetArtist(63);
@@ -27,8 +29,12 @@ namespace RecordDBEFSQLite
             // GetArtistNames();
             // GetArtistsWithNoBio();
             // GetNoBiographyCount();
+
             //// Records
-            GetRecordById(2196);  // TODO: Change this to return a record class only.
+            // CreateRecord(823);
+            // UpdateRecord(5251);
+            // DeleteRecord(5252);
+            // GetRecordById(2196);
             // GetRecordEntity(2196);
             // GetArtistRecordByYear(1974);
             // GetRecordList();
@@ -48,6 +54,79 @@ namespace RecordDBEFSQLite
             // GetNoReviewCount();
             // GetTotalArtistCost();
             // GetTotalArtistDiscs();
+            // RecordHtml(2196);
+        }
+
+        private static void DeleteRecord(int recordId)
+        {
+            var recId = _rd.DeleteRecord(recordId);
+            if (recId != 0)
+            {
+                Console.WriteLine($"Record with Id: {recId} deleted.");
+            }
+        }
+
+        private static void UpdateRecord(int recordId)
+        {
+            Record record = new()
+            {
+                RecordId = recordId,
+                Name = "Far Way More Fun In Paradise",
+                Recorded = 1999,
+                Label = "Whoppo",
+                Pressing = "Au",
+                Field = "Blues",
+                Rating = "****",
+                Discs = 1,
+                Media = "CD",
+                Bought = "21-06-2022",
+                Cost = 12.99,
+                Review = "This is Alan's third album. Just before he went mad!"
+            };
+
+            Record newRecord = _rd.UpdateRecord(record);
+
+            Console.WriteLine(newRecord.ToString());
+        }
+
+        private static void CreateRecord(int artistId)
+        {
+            Record record = new()
+            {
+                ArtistId = artistId,
+                Name = "No Fun In Paradise",
+                Recorded = 1988,
+                Label = "Whoppo",
+                Pressing = "Au",
+                Field = "Rock",
+                Rating = "***",
+                Discs = 1,
+                Media = "CD",
+                Bought = "06/08/2017",
+                Cost = 10.99,
+                Review = "This is Alan's third album."
+            };
+
+            var rec = _rd.CreateRecord(record);
+
+            if (rec.RecordId > 0)
+            {
+                Console.WriteLine($"New record created with Id: {rec.RecordId}");
+            }
+            else 
+            { 
+                Console.WriteLine("ERROR: record not created!"); 
+            }
+        }
+
+        private static void RecordHtml(int recordId)
+        {
+            var r = _rd.GetArtistRecordEntity(recordId);
+
+            if (r != null)
+            {
+                Console.WriteLine($"<p><strong>ArtistId:</strong> {r.ArtistId}</p>\n<p><strong>Artist:</strong> {r.Artist}</p>\n<p><strong>RecordId:</strong> {r.RecordId}</p>\n<p><strong>Recorded:</strong> {r.Recorded}</p>\n<p><strong>Name:</strong> {r.Name}</p>\n<p><strong>Rating:</strong> {r.Rating}</p>\n<p><strong>Media:</strong> {r.Media}\n");
+            }
         }
 
         private static void GetTotalArtistDiscs()
@@ -258,10 +337,10 @@ namespace RecordDBEFSQLite
         {
             Artist artist = new()
             {
-                FirstName = "Joe",
-                LastName = "Whoppo",
+                FirstName = "Alan",
+                LastName = "Robson",
                 Name = "",
-                Biography = "Joe is a country and western singer. He likes both kinds of music."
+                Biography = "Alan is a country and western singer. He likes both kinds of music."
             };
 
             artist.Name = string.IsNullOrEmpty(artist.FirstName) ? artist.LastName : $"{artist.FirstName} {artist.LastName}";

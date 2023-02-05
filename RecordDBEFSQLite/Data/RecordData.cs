@@ -11,6 +11,65 @@ namespace RecordDBEFSQLite.Data
 {
     public class RecordData
     {
+        /// <summary>
+        /// Insert a new record.
+        /// </summary>
+        public static Record CreateRecord(Record record)
+        {
+            using (var context = new RecordDbContext())
+            {
+                context.Records.Add(record);
+                context.SaveChanges();
+
+                var newRecord = context.Records.FirstOrDefault(r => r.Name == record.Name);
+                return newRecord ?? new Record { RecordId = 0 };
+            }
+        }
+
+        /// <summary>
+        /// Update a record using variables.
+        /// </summary>
+        public static Record UpdateRecord(Record record)
+        {
+            using (var context = new RecordDbContext())
+            {
+                var recordToUpdate = context.Records.FirstOrDefault(r => r.RecordId == record.RecordId);
+
+                if (recordToUpdate != null)
+                {
+                    // I have to add the ArtistId into the new record.
+                    var artistId = recordToUpdate.ArtistId;
+                    record.ArtistId = artistId;
+                    context.Entry(recordToUpdate).CurrentValues.SetValues(record);
+                    context.SaveChanges();
+                }
+
+                var updatedRecord = context.Records.FirstOrDefault(r => r.RecordId == record.RecordId);
+                return updatedRecord ?? new Record { RecordId = 0 };
+            }
+        }
+
+        /// <summary>
+        /// Delete record.
+        /// </summary>
+        public static int DeleteRecord(int recordId)
+        {
+            var recId = 0;
+
+            using (var context = new RecordDbContext())
+            {
+                var record = context.Records.FirstOrDefault(r => r.RecordId == recordId);
+                if (record != null)
+                {
+                    recId= record.RecordId;
+                    context.Records.Remove(record);
+                    context.SaveChanges();
+                }
+            }
+            
+            return recId;
+        }
+
         public static List<Record> GetRecords()
         {
             var list = new List<Record>();
@@ -18,6 +77,32 @@ namespace RecordDBEFSQLite.Data
             {
                 return list = context.Records.OrderBy(r => r.ArtistId).ThenBy(r => r.Recorded).ToList();
             }
+        }
+
+        public static dynamic? GetArtistRecordEntity(int recordId)
+        {
+            using (var context = new RecordDbContext())
+            {
+                var record = context.Records
+                    .Join(context.Artists, r => r.ArtistId, a => a.ArtistId, (r, a) => new
+                    {
+                        ArtistId = a.ArtistId,
+                        Artist = a.Name,
+                        RecordId = r.RecordId,
+                        Name = r.Name,
+                        Recorded = r.Recorded,
+                        Rating = r.Rating,
+                        Media = r.Media
+                    })
+                    .FirstOrDefault(r => r.RecordId == recordId);
+
+                if (record != null)
+                {
+                    return record;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -72,37 +157,9 @@ namespace RecordDBEFSQLite.Data
             }
         }
 
-        public static dynamic? GetArtistRecordEntity(int recordId)
-        {
-            using (var context = new RecordDbContext())
-            {
-                var record = context.Records
-                    .Join(context.Artists, r => r.ArtistId, a => a.ArtistId, (r, a) => new { record = r, artist = a })
-                    .Where(r => r.record.RecordId == recordId)
-                    .Select(r => new
-                    {
-                        ArtistId = r.artist.ArtistId,
-                        Artist = r.artist.Name,
-                        RecordId = r.record.RecordId,
-                        Name = r.record.Name,
-                        Recorded = r.record.Recorded,
-                        Rating = r.record.Rating,
-                        Media = r.record.Media
-                    })
-                    .FirstOrDefault();
-
-                if (record != null)
-                {
-                    return record;
-                }
-            }
-
-            return null;
-        }
 
         /// <summary>
         /// Get record details including the artist name.
-        /// TODO: Change this to an anonymous method - remove ArtistRecord class.
         /// </summary>
         public static string GetArtistRecord(int recordId)
         {
@@ -304,12 +361,9 @@ namespace RecordDBEFSQLite.Data
 
         /// <summary>
         /// Get a list of records without reviews.
-        /// TODO: Change this to an anonymous method - remove ArtistRecord class.
         /// </summary>
-        public static List<ArtistRecord> MissingRecordReviews()
+        public static IEnumerable<dynamic> MissingRecordReviews()
         {
-            List<ArtistRecord> artistRecords = new();
-
             using (var context = new RecordDbContext())
             {
                 var records = context.Records
@@ -318,24 +372,17 @@ namespace RecordDBEFSQLite.Data
                     .OrderBy(r => r.artist.LastName).ThenBy(r => r.artist.FirstName)
                     .ToList();
 
-                foreach (var r in records)
+                return records.Select(r => new
                 {
-                    ArtistRecord ar = new()
-                    {
-                        ArtistId = r.artist.ArtistId,
-                        Artist = r.artist.Name,
-                        RecordId = r.record.RecordId,
-                        Name = r.record.Name,
-                        Recorded = r.record.Recorded,
-                        Rating = r.record.Rating,
-                        Media = r.record.Media
-                    };
-
-                    artistRecords.Add(ar);
-                }
+                    ArtistId = r.artist.ArtistId,
+                    Artist = r.artist.Name,
+                    RecordId = r.record.RecordId,
+                    Name = r.record.Name,
+                    Recorded = r.record.Recorded,
+                    Rating = r.record.Rating,
+                    Media = r.record.Media
+                });
             }
-
-            return artistRecords;
         }
 
         public static int SumOfMissingReviews()
