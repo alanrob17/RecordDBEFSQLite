@@ -89,8 +89,17 @@ namespace RecordDBEFSQLite
             Console.WriteLine(newRecord.ToString());
         }
 
-        private static void CreateRecord(int artistId)
+        internal static void CreateRecord(int artistId)
         {
+            using (var context = new RecordDbContext())
+            {
+                if (!context.Artists.Any(a => a.ArtistId == artistId))
+                {
+                    Console.WriteLine("ERROR: artist with specified ID does not exist!");
+                    return;
+                }
+            }
+
             Record record = new()
             {
                 ArtistId = artistId,
@@ -109,14 +118,8 @@ namespace RecordDBEFSQLite
 
             var rec = _rd.CreateRecord(record);
 
-            if (rec.RecordId > 0)
-            {
-                Console.WriteLine($"New record created with Id: {rec.RecordId}");
-            }
-            else 
-            { 
-                Console.WriteLine("ERROR: record not created!"); 
-            }
+            var message = rec.RecordId > 0 ? $"New record created with Id: {rec.RecordId}" : "ERROR: record not created!";
+            Console.WriteLine(message);
         }
 
         private static void RecordHtml(int recordId)
